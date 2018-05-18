@@ -16,12 +16,20 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 
-public class ExcelTags {
+import com.relevantcodes.extentreports.ExtentReports;
+import com.relevantcodes.extentreports.ExtentTest;
+import com.relevantcodes.extentreports.LogStatus;
+
+public class GlitchTags {
 
 	public static void main(String[] args) throws IOException, InterruptedException {
 		// TODO Auto-generated method stub
 		String baseURL;
 		WebDriver driver;
+		ExtentReports report;
+		ExtentTest test;
+
+		 
 		System.setProperty("webdriver.chrome.driver", "D:\\Goutham\\selenium webdrivers\\chromedriver.exe");
 		
 		driver = new ChromeDriver();
@@ -33,10 +41,12 @@ public class ExcelTags {
 		XSSFWorkbook ExcelWBook;
 		XSSFSheet ExcelWSheet;
 		XSSFCell Cell;
+		report = new ExtentReports("D:\\Users\\goutham.p\\git\\JustStartingAuto\\outputFile\\gl17chtagsReport.html");
+		// creating tests
+		test = report.startTest("gl17ch tags started");
 		
 		String path = "D:\\Users\\goutham.p\\eclipse-workspace\\JustStartingAuto\\bin\\ExcelRead.xlsx";
 		String sheetName = "Sheet1";  
-		
 		
 		FileInputStream ExcelFile = new FileInputStream(path);
 		ExcelWBook = new XSSFWorkbook(ExcelFile);
@@ -46,10 +56,10 @@ public class ExcelTags {
 		
 		//Get the redirection URL
 		String[] value = new String[10];
-		for (int j=0;j<=2;j++) {
+		for (int j=0;j<=1;j++) {
 			Cell = ExcelWSheet.getRow(j).getCell(1);
-				String test = Cell.getStringCellValue().toString();
-				value[j]= test;
+				String celldata = Cell.getStringCellValue().toString();
+				value[j]= celldata;
 				int sno = j+1;
 				System.out.println("The value of cta url given is:" + sno + ". " + value[j]);
 				
@@ -57,7 +67,8 @@ public class ExcelTags {
 		//check the given URL and compare with redirection URL
 		
 		for (int i=0;i<=totalRow-1;i++) {
-				Cell = ExcelWSheet.getRow(i).getCell(0);
+			if(ExcelWSheet.getRow(i)==null) continue;
+			Cell = ExcelWSheet.getRow(i).getCell(0);
 
 				String CellData = Cell.getStringCellValue();
 				
@@ -65,16 +76,19 @@ public class ExcelTags {
 				System.out.println(j + ". " + CellData);
 			baseURL = CellData;
 				driver.get(baseURL);
+				test.log(LogStatus.INFO, "URL given");
 				Thread.sleep(1000);
 				String ActualURL = driver.getCurrentUrl();
 				System.out.println("The final URL is " +ActualURL);
 				Row row = ExcelWSheet.getRow(i);
 				if(Arrays.asList(value).contains(ActualURL)) {
 					System.out.println("The urls match");
+					test.log(LogStatus.PASS, "The URLs matched");
 				row.createCell(2).setCellValue("Pass");
 				}
 				else {
 					System.out.println("Both the urls are different");
+					test.log(LogStatus.FAIL, "Both the urls are different");
 					row.createCell(2).setCellValue("Fail");
 				}
 
@@ -91,7 +105,9 @@ public class ExcelTags {
 		fileOut.flush();
 		fileOut.close();
 		ExcelWBook.close();
-		
+		driver.quit();
+		report.endTest(test);
+		report.flush();
 	}
 
 }
